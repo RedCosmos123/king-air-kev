@@ -2,16 +2,16 @@
   "name": "King Air Kev",
   "short_name": "King Air Kev",
   "description": "A retro King Air dodging game built for iPhone.",
-  "start_url": "./",
+  "start_url": "./?app=8",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#030814",
   "theme_color": "#07162d",
   "icons": [
     {
-      "src": "kev-face-icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "kev-face-app-icon-v2.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
