@@ -1,12 +1,9 @@
-const CACHE = "base-jumper-arcade-neon-v33";
+const CACHE = "base-jumper-arcade-neon-v34";
 const FILES = [
-  "./", "index.html", "styles.css?v=33", "app.js?v=33", "manifest.json",
+  "./", "index.html", "styles.css?v=34", "app.js?v=34", "manifest.json",
   "assets/opening.webp", "assets/house.webp", "assets/kitchen.webp",
   "assets/phone.webp", "assets/decision.webp", "assets/icon-192.png", "assets/icon-512.png",
-  "assets/jumper-base.webp", "assets/jumper-tshirt.webp", "assets/jumper-hoodie.webp", "assets/jumper-vest.webp",
-  "assets/jumper-tshirt-blonde.webp", "assets/jumper-tshirt-brown.webp", "assets/jumper-tshirt-ginger.webp",
-  "assets/jumper-hoodie-blonde.webp", "assets/jumper-hoodie-brown.webp", "assets/jumper-hoodie-ginger.webp",
-  "assets/jumper-vest-blonde.webp", "assets/jumper-vest-brown.webp", "assets/jumper-vest-ginger.webp",
+  "assets/jumper-base.webp",
   "assets/jumper-tshirt-blonde-shorts.webp", "assets/jumper-tshirt-brown-shorts.webp", "assets/jumper-tshirt-ginger-shorts.webp",
   "assets/jumper-tshirt-blonde-trousers.webp", "assets/jumper-tshirt-brown-trousers.webp", "assets/jumper-tshirt-ginger-trousers.webp",
   "assets/jumper-hoodie-blonde-shorts.webp", "assets/jumper-hoodie-brown-shorts.webp", "assets/jumper-hoodie-ginger-shorts.webp",
