@@ -1,49 +1,21 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#080915" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="description" content="BASE Jumper: Arcade — playable mobile development build." />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%23080915'/%3E%3Cpath d='M8 16h48L44 34H20z' fill='%23ff3fa4'/%3E%3Cpath d='M29 30h6v20h-6zM21 48h22v6H21z' fill='%2342d9ff'/%3E%3C/svg%3E" />
-  <title>BASE Jumper: Arcade — Opening Chapter</title>
-  <link rel="stylesheet" href="styles.css?v=2" />
-</head>
-<body>
-  <main id="app" class="app-shell">
-    <div class="scanlines"></div>
-    <section id="titleScreen" class="screen active title-screen">
-      <div class="title-city" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="title-wrap">
-        <div class="kicker">A TERRIBLE LIFE-CHOICE SIMULATOR</div><div class="title-wing">BASE</div><h1>JUMPER</h1><div class="title-arcade">ARCADE</div>
-        <div class="title-jumper pixel-person pose-fly"><b></b><em></em></div>
-        <p class="tagline">BUILD YOUR SCORE. MAKE BAD DECISIONS.</p>
-        <button id="newRunBtn" class="pixel-btn primary">NEW CAREER</button><button id="continueBtn" class="pixel-btn" disabled>CONTINUE</button>
-        <button id="soundBtn" class="sound-btn">♪ SOUND ON</button><p class="build">SPRINT 2 • OPENING CHAPTER</p>
-      </div>
-    </section>
-    <section id="setupScreen" class="screen setup-screen">
-      <div class="screen-head"><span>NEW CAREER</span><strong id="setupStepText">1 / 4</strong></div>
-      <div class="creator-stage"><div id="creatorPerson" class="creator-person hair-blonde skin-fair"><span class="head"></span><span class="hair"></span><span class="body"></span><span class="legs"></span></div></div>
-      <div class="panel creator-panel">
-        <div class="setup-step active" data-step="0"><h2>NAME YOUR JUMPER</h2><label class="name-label">NAME <input id="playerName" maxlength="8" value="DAN" autocomplete="off" /></label><p class="tiny-copy">This will appear on social posts, scoreboards and, statistically, the BFL.</p></div>
-        <div class="setup-step" data-step="1"><h2>CHOOSE NATIONALITY</h2><div class="choice-stack" data-group="nationality"><button data-value="British" class="choice selected"><span>🇬🇧 BRITISH</span><small>Money ×2 • Friends ×1 • Sex Appeal ×3</small></button><button data-value="American" class="choice"><span>🇺🇸 AMERICAN</span><small>Money ×3 • Friends ×2 • Sex Appeal ×1</small></button><button data-value="Australian" class="choice"><span>🇦🇺 AUSTRALIAN</span><small>Money ×2 • Friends ×3 • Sex Appeal ×1</small></button></div></div>
-        <div class="setup-step" data-step="2"><h2>CHOOSE YOUR HAIR</h2><div class="choice-stack" data-group="hair"><button data-value="Blonde" class="choice selected"><span>BLONDE • EASY</span><small>Everybody loves a pretty boy.</small></button><button data-value="Brown" class="choice"><span>BROWN • MEDIUM</span><small>Just kind of blend in.</small></button><button data-value="Ginger" class="choice"><span>GINGER • HARD</span><small>Life is tough for a ginger.</small></button></div></div>
-        <div class="setup-step" data-step="3"><h2>CHOOSE YOUR COMPLEXION</h2><div class="choice-row" data-group="complexion"><button data-value="Fair" class="choice selected">FAIR</button><button data-value="Light Tan" class="choice">LIGHT TAN</button><button data-value="Pale Winter" class="choice">PALE WINTER</button></div><h3>T-SHIRT</h3><div class="choice-row" data-group="clothes"><button data-value="Teal" class="choice selected">TEAL</button><button data-value="Purple" class="choice">PURPLE</button><button data-value="Red" class="choice">RED</button></div><h3>SHORTS</h3><div class="choice-row" data-group="lower"><button data-value="Charcoal" class="choice selected">CHARCOAL</button><button data-value="Black" class="choice">BLACK</button><button data-value="Tan" class="choice">TAN</button></div></div>
-        <div class="setup-nav"><button id="setupBackBtn" class="pixel-btn small" disabled>BACK</button><button id="setupNextBtn" class="pixel-btn primary small">NEXT</button></div>
-      </div>
-    </section>
-    <section id="cinematicScreen" class="screen game-screen"><div id="cinematicHud" class="hud"></div><div id="sceneStage" class="scene-stage scene-livingroom"><div class="scene-sky"><i></i></div><div class="scene-set"></div><div id="sceneCharacters" class="scene-characters"></div><div id="sceneCaption" class="scene-caption hidden"></div></div><div class="dialogue-box"><div id="speaker" class="speaker">DAN</div><p id="dialogueText"></p><div id="dialogueChoices" class="dialogue-choices"></div><button id="nextDialogueBtn" class="pixel-btn primary small">NEXT</button></div></section>
-    <section id="nightmareScreen" class="screen game-screen"><div class="level-banner"><small>NIGHTMARE</small><strong>HELL NAH — JUST SEND IT</strong></div><canvas id="nightmareCanvas" width="360" height="640"></canvas><div class="control-hint">INVERTED CONTROLS</div><div class="touch-controls two"><button id="nightLeft">◀</button><button id="nightRight">▶</button></div></section>
-    <section id="affScreen" class="screen game-screen"><div id="affHud" class="hud"></div><div class="level-banner"><small>AFF LEVEL 1</small><strong>STAY STABLE</strong></div><canvas id="affCanvas" width="360" height="640"></canvas><div class="aff-instruments"><span id="affStability">STABILITY 50%</span><span id="affTimer">10.0</span></div><div class="touch-controls two"><button id="affLeft">◀ LEFT</button><button id="affRight">RIGHT ▶</button></div></section>
-    <section id="trainingScreen" class="screen game-screen"><div id="trainingHud" class="hud"></div><div class="level-banner"><small>BASE SCHOOL • FRANCE</small><strong id="trainingTitle">EXIT SIMULATOR</strong></div><div class="training-stage"><div class="alps"><i></i><i></i><i></i></div><div class="platform"></div><div class="foam-pit"><i></i><i></i><i></i><i></i><i></i></div><div id="trainingJumper" class="rig-jumper"><span class="helmet"></span><span class="torso"></span><span class="rig"></span><span class="limb arm-a"></span><span class="limb arm-b"></span><span class="limb leg-a"></span><span class="limb leg-b"></span></div><div id="trainingCoach" class="coach">COACH<br><span id="coachText">Show me a weak exit.</span></div><div class="power-wrap training-power"><div class="power-label">EXIT POWER</div><div class="power-bar"><div class="zone red top"></div><div class="zone amber top2"></div><div class="zone green"></div><div class="zone amber bottom2"></div><div class="zone red bottom"></div><div id="trainingMarker" class="marker"></div></div><button id="trainingExitBtn" class="pixel-btn danger">HOLD EXIT</button></div><div id="trainingMessage" class="jump-message">Lesson 1: deliberately release in the lower red.</div></div></section>
-    <section id="realJumpScreen" class="screen game-screen"><div id="jumpHud" class="hud"></div><div class="level-banner"><small>JUMP 001 • FRANCE</small><strong>YOUR FIRST OBJECT</strong></div><div class="jump-stage"><div class="sunset"></div><div class="distant-mountains"></div><div class="cliff"></div><div class="valley"></div><div id="realJumper" class="rig-jumper real"><span class="helmet"></span><span class="torso"></span><span class="rig"></span><span class="limb arm-a"></span><span class="limb arm-b"></span><span class="limb leg-a"></span><span class="limb leg-b"></span></div><div class="power-wrap real-power"><div class="power-label">EXIT POWER</div><div class="power-bar"><div class="zone red top"></div><div class="zone amber top2"></div><div class="zone green"></div><div class="zone amber bottom2"></div><div class="zone red bottom"></div><div id="realMarker" class="marker"></div></div><button id="realExitBtn" class="pixel-btn danger">HOLD EXIT</button></div><button id="pitchBtn" class="pitch-btn hidden">PITCH!</button><div id="jumpMessage" class="jump-message">Hold EXIT. Release in the green.</div></div></section>
-    <section id="rewardScreen" class="screen game-screen reward-screen"><div id="rewardHud" class="hud"></div><div class="reward-rays"></div><div class="reward-card"><div class="reward-kicker">CAREER PAYOUT</div><div id="rewardIcon" class="reward-icon">❤</div><div id="rewardLabel" class="reward-label">LIKES</div><div id="rewardValue" class="reward-value">+0</div><div id="rewardMultiplier" class="reward-multiplier"></div><button id="rewardNextBtn" class="pixel-btn primary">CLAIM</button></div></section>
-    <section id="bflScreen" class="screen game-screen bfl-screen"><div class="bfl-card"><div class="bfl-top">THE BASE FATALITY LIST</div><h2 id="bflNumber">BFL #1125</h2><div class="bfl-photo"><div id="bflPortrait" class="skull">☠</div><span>FILE PHOTO</span></div><div id="bflReport" class="bfl-report"></div><div class="bfl-actions"><button id="acceptDeathBtn" class="pixel-btn danger">ACCEPT BFL NUMBER</button><button id="useLuckBtn" class="pixel-btn primary">🍀 USE LUCK — GO BACK</button></div></div></section>
-    <section id="chapterScreen" class="screen chapter-screen"><div class="chapter-card"><div class="chapter-complete">CHAPTER COMPLETE</div><h2>THE BEGINNING<br>OF THE END</h2><div class="polaroid"><div class="polaroid-art">🪂</div><span>FRANCE • JUMP 001</span></div><div class="chapter-stats"><div><span>SCORE</span><strong id="chapterScore">0</strong></div><div><span>DEATHS</span><strong id="chapterDeaths">0</strong></div><div><span>LUCK USED</span><strong id="chapterLuck">0</strong></div></div><p>Your sensible life remains almost entirely intact.</p><button id="replayBtn" class="pixel-btn primary">REPLAY CHAPTER</button></div></section>
-    <div id="toast" class="toast"></div>
-  </main>
-  <script src="game.js?v=2"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+    <meta name="theme-color" content="#08051d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BASE Jumper" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2308051d'/%3E%3Cpath d='M11 18h25c10 0 16 5 16 12 0 5-3 8-7 10 5 1 8 5 8 10 0 9-7 14-19 14H11V18zm13 10v8h10c4 0 6-1 6-4s-2-4-6-4H24zm0 18v8h11c4 0 6-1 6-4s-2-4-6-4H24z' fill='%2338edff' stroke='%23ff2cd4' stroke-width='2'/%3E%3Cpath d='M4 12h56' stroke='%23ffe23d' stroke-width='4'/%3E%3C/svg%3E" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png" />
+    <link rel="stylesheet" href="styles.css?v=33" />
+    <title>BASE Jumper: Arcade</title>
+  </head>
+  <body>
+    <main id="app" aria-live="polite"></main>
+    <noscript>This game requires JavaScript.</noscript>
+    <script src="app.js?v=33" defer></script>
+  </body>
 </html>
