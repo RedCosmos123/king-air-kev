@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b18" />
+  <title>BASE Jumper: Arcade — Sprint 1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="app" class="app-shell">
+    <section id="titleScreen" class="screen active">
+      <div class="scanlines"></div>
+      <div class="title-wrap">
+        <div class="kicker">16-BIT CAREER SIMULATOR</div>
+        <h1>BASE JUMPER:<br><span>ARCADE</span></h1>
+        <p class="tagline">BUILD YOUR SCORE. MAKE BAD DECISIONS.</p>
+        <button id="newRunBtn" class="pixel-btn primary">NEW CAREER</button>
+        <button id="continueBtn" class="pixel-btn" disabled>CONTINUE</button>
+        <p class="build">SPRINT 1 • VERTICAL SLICE</p>
+      </div>
+    </section>
+
+    <section id="setupScreen" class="screen">
+      <div class="panel">
+        <h2>CREATE YOUR JUMPER</h2>
+        <label>NAME <input id="playerName" maxlength="8" value="DAN" /></label>
+
+        <fieldset>
+          <legend>NATIONALITY</legend>
+          <div class="choice-row" data-group="nationality">
+            <button data-value="British" class="choice selected">🇬🇧 British</button>
+            <button data-value="American" class="choice">🇺🇸 American</button>
+            <button data-value="Australian" class="choice">🇦🇺 Australian</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>HAIR / DIFFICULTY</legend>
+          <div class="choice-row" data-group="hair">
+            <button data-value="Blonde" class="choice selected">Blonde • Easy</button>
+            <button data-value="Brown" class="choice">Brown • Medium</button>
+            <button data-value="Ginger" class="choice">Ginger • Hard</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>COMPLEXION</legend>
+          <div class="choice-row" data-group="complexion">
+            <button data-value="Fair" class="choice selected">Fair</button>
+            <button data-value="Light Tan" class="choice">Light Tan</button>
+            <button data-value="Pale Winter" class="choice">Pale Winter</button>
+          </div>
+        </fieldset>
+
+        <button id="startCareerBtn" class="pixel-btn primary">START CAREER</button>
+      </div>
+    </section>
+
+    <section id="storyScreen" class="screen">
+      <div id="hud" class="hud"></div>
+      <div class="story-stage">
+        <div class="pixel-scene home-scene">
+          <div class="moon"></div>
+          <div class="house"></div>
+          <div class="jumper standing"></div>
+        </div>
+        <div class="dialogue-box">
+          <div id="speaker" class="speaker">PLAYER</div>
+          <p id="dialogueText"></p>
+          <button id="nextDialogueBtn" class="pixel-btn primary small">NEXT</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="jumpScreen" class="screen">
+      <div id="jumpHud" class="hud"></div>
+      <div class="jump-stage" id="jumpStage">
+        <div class="cliff"></div>
+        <div id="jumper" class="jumper"></div>
+        <div class="power-wrap">
+          <div class="power-label">EXIT POWER</div>
+          <div class="power-bar">
+            <div class="zone red top"></div>
+            <div class="zone amber top2"></div>
+            <div class="zone green"></div>
+            <div class="zone amber bottom2"></div>
+            <div class="zone red bottom"></div>
+            <div id="powerMarker" class="marker"></div>
+          </div>
+          <button id="exitBtn" class="pixel-btn danger">HOLD EXIT</button>
+        </div>
+        <div id="jumpMessage" class="jump-message">Hold EXIT and release in the green.</div>
+      </div>
+    </section>
+
+    <section id="rewardScreen" class="screen">
+      <div id="rewardHud" class="hud"></div>
+      <div class="reward-card">
+        <div class="reward-kicker">SCORE PAYOUT</div>
+        <div id="rewardIcon" class="reward-icon">❤</div>
+        <div id="rewardLabel" class="reward-label">LIKES</div>
+        <div id="rewardValue" class="reward-value">+0</div>
+        <button id="rewardNextBtn" class="pixel-btn primary">CONTINUE</button>
+      </div>
+    </section>
+
+    <section id="bflScreen" class="screen">
+      <div class="bfl-card">
+        <div class="bfl-top">BASE FATALITY LIST</div>
+        <h2 id="bflNumber">BFL #1125</h2>
+        <div id="bflPortrait" class="bfl-portrait">☠</div>
+        <div id="bflReport" class="bfl-report"></div>
+        <div class="bfl-actions">
+          <button id="acceptDeathBtn" class="pixel-btn danger">ACCEPT BFL NUMBER</button>
+          <button id="useLuckBtn" class="pixel-btn primary">🍀 USE LUCK — GO BACK</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameOverScreen" class="screen">
+      <div class="gameover-card">
+        <h2>RUN COMPLETE</h2>
+        <div id="finalScore" class="final-score">0</div>
+        <p>This Sprint 1 build proves setup, persistent HUD, dialogue, exit timing, rewards, BFL and Luck retry.</p>
+        <button id="restartBtn" class="pixel-btn primary">PLAY AGAIN</button>
+      </div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
