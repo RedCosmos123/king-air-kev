@@ -1,6 +1,6 @@
-const CACHE = "base-jumper-arcade-neon-v34";
+const CACHE = "base-jumper-arcade-neon-v35";
 const FILES = [
-  "./", "index.html", "styles.css?v=34", "app.js?v=34", "manifest.json",
+  "./", "index.html", "styles.css?v=35", "app.js?v=35", "manifest.json",
   "assets/opening.webp", "assets/house.webp", "assets/kitchen.webp",
   "assets/phone.webp", "assets/decision.webp", "assets/icon-192.png", "assets/icon-512.png",
   "assets/jumper-base.webp",
@@ -10,7 +10,7 @@ const FILES = [
   "assets/jumper-hoodie-blonde-trousers.webp", "assets/jumper-hoodie-brown-trousers.webp", "assets/jumper-hoodie-ginger-trousers.webp",
   "assets/jumper-vest-blonde-shorts.webp", "assets/jumper-vest-brown-shorts.webp", "assets/jumper-vest-ginger-shorts.webp",
   "assets/jumper-vest-blonde-trousers.webp", "assets/jumper-vest-brown-trousers.webp", "assets/jumper-vest-ginger-trousers.webp",
-  "assets/career-city.webp", "assets/kids-closeup.webp",
+  "assets/career-city.webp", "assets/kids-closeup.webp", "assets/brian-street.png", "assets/dave-office.png", "assets/parents-car.png",
   "assets/hair-blonde.webp", "assets/hair-brown.webp", "assets/hair-ginger.webp",
   "assets/skin-fair.webp", "assets/skin-light-tan.webp", "assets/skin-pale-winter.webp",
   "assets/top-t-shirt.webp", "assets/top-hoodie.webp", "assets/top-vest.webp",
