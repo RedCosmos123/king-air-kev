@@ -1,141 +1,89 @@
-const $ = (s)=>document.querySelector(s);
-const $$ = (s)=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const screens={title:$('#titleScreen'),setup:$('#setupScreen'),cinematic:$('#cinematicScreen'),nightmare:$('#nightmareScreen'),aff:$('#affScreen'),training:$('#trainingScreen'),real:$('#realJumpScreen'),reward:$('#rewardScreen'),bfl:$('#bflScreen'),chapter:$('#chapterScreen')};
+const defaults={name:'DAN',nationality:'British',hair:'Blonde',complexion:'Fair',clothes:'Teal',lower:'Charcoal',luck:5,followers:0,likes:0,friends:0,sti:0,money:0,credit:0,xp:0,relationship:100,responsibilities:100,bfl:1125,deaths:0,luckUses:0,checkpoint:'opening'};
+let state={...defaults}, soundOn=true, audioCtx=null, setupStep=0, storyQueue=[], storyIndex=0, storyDone=null;
+const multi={British:{money:2,friends:1,sti:3},American:{money:3,friends:2,sti:1},Australian:{money:2,friends:3,sti:1}};
+const statDefs=[['🍀','luck'],['👥','followers'],['♥','likes'],['🧑‍🤝‍🧑','friends'],['♀','sti'],['£','money'],['💳','credit'],['XP','xp'],['♥︎','relationship'],['!','responsibilities']];
 
-const screens = {
-  title: $('#titleScreen'), setup: $('#setupScreen'), story: $('#storyScreen'), jump: $('#jumpScreen'),
-  reward: $('#rewardScreen'), bfl: $('#bflScreen'), gameover: $('#gameOverScreen')
-};
+function show(name){Object.values(screens).forEach(s=>s.classList.remove('active'));screens[name].classList.add('active');renderHud()}
+function renderHud(){const html=statDefs.map(([i,k])=>`<div class="hud-item">${i}<strong>${state[k]}</strong></div>`).join('');['cinematicHud','affHud','trainingHud','jumpHud','rewardHud'].forEach(id=>{const e=$('#'+id);if(e)e.innerHTML=html})}
+function save(checkpoint=state.checkpoint){state.checkpoint=checkpoint;localStorage.setItem('baseJumperArcadeSave',JSON.stringify(state));updateContinue()}
+function load(){try{const s=JSON.parse(localStorage.getItem('baseJumperArcadeSave'));if(s)state={...defaults,...s}}catch{}}
+function updateContinue(){const has=!!localStorage.getItem('baseJumperArcadeSave');$('#continueBtn').disabled=!has}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1000)}
+function tone(freq=440,dur=.08,type='square',vol=.035){if(!soundOn)return;audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.value=vol;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur)}
+function sting(kind){const notes=kind==='win'?[523,659,784,1046]:kind==='fail'?[220,165,110]:[330,440];notes.forEach((n,i)=>setTimeout(()=>tone(n,.12,kind==='fail'?'sawtooth':'square'),i*90))}
 
-const state = {
-  name:'DAN', nationality:'British', hair:'Blonde', complexion:'Fair',
-  luck:5, followers:0, likes:0, friends:0, sti:0, money:0, credit:0,
-  xp:0, relationship:100, responsibilities:100, bfl:1125, deaths:0, luckUses:0,
-  storyIndex:0, rewardQueue:[], rewardIndex:0
-};
+function resetRun(){state={...defaults};setupStep=0;renderSetup();show('setup')}
+$('#newRunBtn').onclick=resetRun;
+$('#continueBtn').onclick=()=>{load();updateCreator();resumeCheckpoint()};
+$('#soundBtn').onclick=()=>{soundOn=!soundOn;$('#soundBtn').textContent=soundOn?'♪ SOUND ON':'♪ SOUND OFF';tone(660)};
+$('#replayBtn').onclick=()=>{localStorage.removeItem('baseJumperArcadeSave');resetRun()};
 
-const multipliers = {
-  British:{money:2,friends:1,sti:3},
-  American:{money:3,friends:2,sti:1},
-  Australian:{money:2,friends:3,sti:1}
-};
+function resumeCheckpoint(){if(state.checkpoint==='aff')startAFF();else if(state.checkpoint==='training')startTraining(true);else if(state.checkpoint==='real')startRealJump();else startOpening()}
+function choiceGroup(group){$$(`[data-group="${group}"] .choice`).forEach(b=>b.onclick=()=>{$$(`[data-group="${group}"] .choice`).forEach(x=>x.classList.remove('selected'));b.classList.add('selected');state[group]=b.dataset.value;updateCreator();tone(480)})}
+['nationality','hair','complexion','clothes','lower'].forEach(choiceGroup);
+function updateCreator(){const p=$('#creatorPerson');p.className='creator-person '+`hair-${state.hair.toLowerCase()} skin-${state.complexion.toLowerCase().replaceAll(' ','-')} clothes-${state.clothes.toLowerCase()}`;const shirts={Teal:'#28a8a8',Purple:'#9a4bd2',Red:'#e54448'},skins={Fair:'#e3aa7c','Light Tan':'#c98558','Pale Winter':'#f0c7a4'},shorts={Charcoal:'#393c62',Black:'#171923',Tan:'#92714b'};document.documentElement.style.setProperty('--shirt',shirts[state.clothes]);document.documentElement.style.setProperty('--skin',skins[state.complexion]);document.documentElement.style.setProperty('--shorts',shorts[state.lower])}
+function renderSetup(){$$('.setup-step').forEach((e,i)=>e.classList.toggle('active',i===setupStep));$('#setupStepText').textContent=`${setupStep+1} / 4`;$('#setupBackBtn').disabled=setupStep===0;$('#setupNextBtn').textContent=setupStep===3?'START CAREER':'NEXT';updateCreator()}
+$('#setupBackBtn').onclick=()=>{setupStep=Math.max(0,setupStep-1);renderSetup()};
+$('#setupNextBtn').onclick=()=>{tone(520);if(setupStep<3){setupStep++;renderSetup();return}state.name=($('#playerName').value.trim()||'DAN').toUpperCase();save('opening');startOpening()};
 
-const story = [
-  ['PLAYER', 'Fuck yeah, I’m gonna be a BASE jumper.'],
-  ['BRIAN', 'Nobody cares, mate.'],
-  ['DAVE', 'Couldn’t give a shit.'],
-  ['PLAYER', 'I’ll do it properly. Safe progression. No stupid partying.'],
-  ['GAME', 'Excellent. That promise will age terribly.']
+const actor=(role,extra='')=>`<div class="actor ${role} ${extra}"></div>`;
+const opening=[
+ {scene:'livingroom',speaker:'NARRATOR',text:'An ordinary evening. A sensible job. A loving wife, a daughter and a baby son. Absolutely no reason to ruin any of it.',actors:['player','wife','child','baby']},
+ {scene:'livingroom',speaker:'WINGSUIT VIDEO',text:'Mountain. Human. Nylon. Questionable judgement. Eight million views.',actors:['player','wife','child','baby']},
+ {scene:'livingroom',speaker:'PLAYER',text:'Fuck yeah. I’m gonna be a BASE jumper.',actors:['player','wife']},
+ {scene:'livingroom',speaker:'WIFE',text:'You’re forty. You complained about your back getting off the sofa.',actors:['player','wife']},
+ {scene:'suburb',speaker:'BRIAN',text:'Nobody cares, mate.',actors:['player','brian']},
+ {scene:'office',speaker:'DAVE',text:'Couldn’t give a shit. Is that report finished?',actors:['player','dave']},
+ {scene:'livingroom',speaker:'PLAYER',text:'I’ll do it properly. Safe progression. No stupid partying. I promise.',actors:['player','wife']},
+ {scene:'bedroom',speaker:'YOUR FIRST DECISION',text:'How should a responsible future athlete begin?',actors:['player'],choices:[{label:'BOOK SKYDIVING TRAINING',value:'safe'},{label:'HELL NAH — JUST SEND IT BASE JUMPING',value:'reckless'}]}
 ];
+function startOpening(){save('opening');playStory(opening,choice=>{if(choice==='reckless')startNightmare();else startAFF()})}
+function playStory(items,done){storyQueue=items;storyIndex=0;storyDone=done;show('cinematic');renderStory()}
+function renderStory(){const s=storyQueue[storyIndex];$('#sceneStage').className='scene-stage scene-'+s.scene;$('#speaker').textContent=s.speaker.replace('PLAYER',state.name);$('#dialogueText').textContent=s.text;$('#sceneCharacters').innerHTML=(s.actors||[]).map(r=>actor(r)).join('');$('#dialogueChoices').innerHTML='';$('#nextDialogueBtn').classList.toggle('hidden',!!s.choices);if(s.choices)s.choices.forEach(c=>{const b=document.createElement('button');b.textContent=c.label;b.onclick=()=>{tone(c.value==='reckless'?180:620);storyDone(c.value)};$('#dialogueChoices').appendChild(b)});$('#nextDialogueBtn').textContent=storyIndex===storyQueue.length-1?'CONTINUE':'NEXT'}
+$('#nextDialogueBtn').onclick=()=>{tone(560,.04);if(storyIndex<storyQueue.length-1){storyIndex++;renderStory()}else storyDone()};
 
-function show(name){ Object.values(screens).forEach(s=>s.classList.remove('active')); screens[name].classList.add('active'); renderHud(); }
-function renderHud(){
-  const html = [
-    ['🍀',state.luck],['👥',state.followers],['❤',state.likes],['🧑‍🤝‍🧑',state.friends],
-    ['♀',state.sti],['£',state.money],['💳',state.credit],['XP',state.xp]
-  ].map(([i,v])=>`<div class="hud-item">${i}<strong>${v}</strong></div>`).join('');
-  ['hud','jumpHud','rewardHud'].forEach(id=>{ const el=$('#'+id); if(el) el.innerHTML=html; });
-}
+let nightmareRAF,nightX=180,nightVX=0,nightY=130,nightStart=0,nightMove=0;
+function bindHold(el,on,off=()=>{}){el.addEventListener('pointerdown',e=>{e.preventDefault();on()});['pointerup','pointercancel','pointerleave'].forEach(n=>el.addEventListener(n,e=>{e.preventDefault();off()}))}
+bindHold($('#nightLeft'),()=>nightMove=-1,()=>nightMove=0);bindHold($('#nightRight'),()=>nightMove=1,()=>nightMove=0);
+function startNightmare(){show('nightmare');nightX=180;nightY=128;nightVX=0;nightStart=performance.now();cancelAnimationFrame(nightmareRAF);nightmareRAF=requestAnimationFrame(drawNightmare)}
+function drawNightmare(t){const c=$('#nightmareCanvas'),x=c.getContext('2d'),elapsed=(t-nightStart)/1000;x.imageSmoothingEnabled=false;x.fillStyle='#241542';x.fillRect(0,0,360,640);x.fillStyle='#e55774';x.fillRect(0,350,360,290);for(let i=0;i<11;i++){x.fillStyle=i%2?'#10172b':'#161d35';const w=34+(i%3)*12,h=120+(i%4)*40;x.fillRect(i*38,520-h,w,h);x.fillStyle='#ffd45b';for(let yy=530-h;yy<505;yy+=22)for(let xx=i*38+7;xx<i*38+w-5;xx+=14)x.fillRect(xx,yy,5,7)}x.fillStyle='#4b4059';x.fillRect(0,0,108,160);x.fillStyle='#231e2d';x.fillRect(0,155,126,26);nightVX+=(-nightMove)*.17;nightVX*=.95;nightX=Math.max(25,Math.min(335,nightX+nightVX));nightY=128+elapsed*105;x.save();x.translate(nightX,nightY);x.rotate(Math.sin(elapsed*10)*.45+elapsed*.15);x.fillStyle='#e5ac7f';x.fillRect(-8,-19,16,16);x.fillStyle='#2aa4a5';x.fillRect(-10,-3,20,29);x.fillStyle='#141622';x.fillRect(-26,4,52,7);x.fillRect(-10,25,7,30);x.fillRect(3,25,7,30);x.restore();if(nightY<545){nightmareRAF=requestAnimationFrame(drawNightmare)}else{sting('fail');x.fillStyle='#ff334b';x.fillRect(nightX-42,530,84,18);x.fillRect(nightX-25,514,50,50);setTimeout(()=>playStory([{scene:'bedroom',speaker:'PLAYER',text:'AAAAAGH!',actors:['player']},{scene:'bedroom',speaker:'NARRATOR',text:'It was only a nightmare. No Luck consumed. Common sense briefly restored.',actors:['player']},{scene:'dropzone',speaker:'CONFIRMATION EMAIL',text:'AFF COURSE BOOKED. Non-refundable.',actors:['player']}],startAFF),850)}}
 
-function choiceGroup(group){
-  $$(`[data-group="${group}"] .choice`).forEach(btn=>btn.addEventListener('click',()=>{
-    $$(`[data-group="${group}"] .choice`).forEach(b=>b.classList.remove('selected'));
-    btn.classList.add('selected'); state[group]=btn.dataset.value;
-  }));
-}
-['nationality','hair','complexion'].forEach(choiceGroup);
+let affRAF,affStart,affLast,affTilt=0,affInput=0,affScore=0;
+bindHold($('#affLeft'),()=>affInput=-1,()=>affInput=0);bindHold($('#affRight'),()=>affInput=1,()=>affInput=0);
+function startAFF(){save('aff');show('aff');affStart=affLast=performance.now();affTilt=0;affInput=0;affScore=0;cancelAnimationFrame(affRAF);affRAF=requestAnimationFrame(drawAFF)}
+function drawAFF(t){const c=$('#affCanvas'),x=c.getContext('2d'),elapsed=(t-affStart)/1000,dt=Math.min(.05,(t-affLast)/1000),remain=Math.max(0,10-elapsed);affLast=t;affTilt+=affInput*.8+Math.sin(elapsed*2.7)*.12+(Math.random()-.5)*.2;affTilt*=.985;affTilt=Math.max(-34,Math.min(34,affTilt));const stable=Math.max(0,100-Math.abs(affTilt)*3);affScore+=stable/100*dt;$('#affStability').textContent=`STABILITY ${Math.round(stable)}%`;$('#affTimer').textContent=remain.toFixed(1);x.fillStyle='#46bfe5';x.fillRect(0,0,360,640);const scroll=(elapsed*90)%100;x.fillStyle='#e8f2e7';for(let i=-1;i<8;i++){const yy=i*100+scroll;x.fillRect(0,yy,360,3);x.globalAlpha=.3;x.fillRect(55,yy+30,72,12);x.fillRect(240,yy+55,86,15);x.globalAlpha=1}x.save();x.translate(180,315);x.rotate(affTilt*Math.PI/180);x.fillStyle='#e3aa7c';x.fillRect(-10,-36,20,20);x.fillStyle='#2ba3a5';x.fillRect(-13,-15,26,42);x.fillStyle='#15172b';x.fillRect(-65,-4,130,9);x.fillRect(-9,24,8,65);x.fillRect(2,24,8,65);x.fillStyle='#d54e62';x.fillRect(-18,-12,9,35);x.restore();x.strokeStyle=stable>70?'#50ed87':'#ff5264';x.lineWidth=5;x.strokeRect(116,226,128,185);if(remain>0){affRAF=requestAnimationFrame(drawAFF)}else if(affScore>5.6){sting('win');toast('AFF LEVEL PASSED');state.xp=1;save('training');setTimeout(afterAFF,900)}else{sting('fail');toast('UNSTABLE — TRY AGAIN');setTimeout(startAFF,1000)}}
+function afterAFF(){playStory([{scene:'dropzone',speaker:'CHIEF INSTRUCTOR',text:'Congratulations. A licence. Also six beer fines.',actors:['player','instructor']},{scene:'dropzone',speaker:'PLAYER',text:'Six? What for?',actors:['player','instructor']},{scene:'dropzone',speaker:'CHIEF INSTRUCTOR',text:'Because I’m a cunt. Welcome to skydiving.',actors:['player','instructor']},{scene:'france',speaker:'TWO YEARS LATER',text:'1,003 skydives. One suspicious internet advert. A cheap flight to France.',actors:['player']},{scene:'france',speaker:'BASE SCHOOL',text:'FIREBIRD FIRST-JUMP COURSE. Refund policy: absolutely not.',actors:['player','instructor']}],()=>startTraining(true))}
 
-$('#newRunBtn').addEventListener('click',()=>show('setup'));
-$('#startCareerBtn').addEventListener('click',()=>{
-  state.name=($('#playerName').value.trim()||'DAN').toUpperCase();
-  state.storyIndex=0; showStory(); show('story');
-});
+let power=0,powerDir=1,holding=false,powerRAF,lastTick=0,trainingLesson=0,perfectRun=0;
+function speed(){return state.hair==='Ginger'?.103:state.hair==='Brown'?.086:.069}
+function powerTick(t,marker){if(!holding)return;if(!lastTick)lastTick=t;const dt=Math.min(35,t-lastTick);lastTick=t;power+=powerDir*speed()*dt;if(power>=100){power=100;powerDir=-1}else if(power<=0){power=0;powerDir=1}marker.style.bottom=power+'%';powerRAF=requestAnimationFrame(x=>powerTick(x,marker))}
+function setupPower(btn,marker,resolve){btn.onpointerdown=e=>{e.preventDefault();if(holding)return;holding=true;lastTick=0;powerRAF=requestAnimationFrame(t=>powerTick(t,marker))};const finish=e=>{if(!holding)return;e?.preventDefault();holding=false;cancelAnimationFrame(powerRAF);resolve(power)};btn.onpointerup=finish;btn.onpointercancel=finish;btn.onpointerleave=finish}
+function resetPower(marker){holding=false;power=0;powerDir=1;marker.style.bottom='0%'}
+const lessons=[{title:'WEAK EXIT',coach:'Show me a weak exit.',msg:'Lesson 1: deliberately release in the lower red.',ok:p=>p<25},{title:'STRONG EXIT',coach:'Now overpower it.',msg:'Lesson 2: deliberately release in the upper red.',ok:p=>p>75},{title:'CORRECT EXIT',coach:'Find the sweet spot.',msg:'Lesson 3: release in the green.',ok:p=>p>=40&&p<=60},{title:'3 PERFECT EXITS',coach:'Perfect. Now do that three times.',msg:'Perfect exits in a row: 0 / 3',ok:p=>p>=40&&p<=60}];
+function startTraining(fromCheckpoint=false){if(!fromCheckpoint){trainingLesson=0;perfectRun=0}else{trainingLesson=0;perfectRun=0}save('training');show('training');renderLesson();resetPower($('#trainingMarker'))}
+function renderLesson(){const l=lessons[trainingLesson];$('#trainingTitle').textContent=l.title;$('#coachText').textContent=l.coach;$('#trainingMessage').textContent=trainingLesson===3?`Perfect exits in a row: ${perfectRun} / 3`:l.msg;const j=$('#trainingJumper');j.style.left='29%';j.style.bottom='46%';j.style.transform='rotate(0)'}
+function resolveTraining(p){const l=lessons[trainingLesson],ok=l.ok(p),j=$('#trainingJumper');j.style.left='47%';j.style.bottom='17%';j.style.transform=`rotate(${p<25?-65:p>75?125:8}deg)`;if(ok){tone(720);if(trainingLesson===3){perfectRun++;if(perfectRun>=3){$('#trainingMessage').textContent='EXIT TRAINING COMPLETE';state.xp=2;setTimeout(trainingComplete,850);return}}else trainingLesson++;$('#trainingMessage').textContent=trainingLesson===3?`Perfect exits in a row: ${perfectRun} / 3`:'CORRECT — NEXT LESSON';setTimeout(()=>{resetPower($('#trainingMarker'));renderLesson()},700)}else{sting('fail');if(trainingLesson===3)perfectRun=0;$('#trainingMessage').textContent='WRONG ZONE — FOAM PIT IS UNIMPRESSED';setTimeout(()=>{resetPower($('#trainingMarker'));renderLesson()},850)}}
+setupPower($('#trainingExitBtn'),$('#trainingMarker'),resolveTraining);
+function trainingComplete(){state.relationship=75;save('real');playStory([{scene:'france',speaker:'COACH',text:'You can now demonstrate three kinds of terrible exit and one acceptable one.',actors:['player','instructor']},{scene:'france',speaker:'WIFE — PHONE',text:'So you’re safe, you’re not partying, and you’ll be home Sunday?',actors:['player']},{scene:'france',speaker:'PLAYER',text:'Completely safe. Very serious athletes. Early night.',actors:['player']},{scene:'france',speaker:'SYSTEM',text:'RELATIONSHIP 100 → 75',actors:['player']}],startRealJump)}
 
-function showStory(){
-  const [sp,txt] = story[state.storyIndex];
-  $('#speaker').textContent = sp;
-  $('#dialogueText').textContent = txt;
-  $('#nextDialogueBtn').textContent = state.storyIndex===story.length-1 ? 'START JUMP' : 'NEXT';
-}
-$('#nextDialogueBtn').addEventListener('click',()=>{
-  if(state.storyIndex < story.length-1){ state.storyIndex++; showStory(); }
-  else startJump();
-});
+let exitResult='perfect',pitchTimer=null,pitchWindow=false;
+function startRealJump(){save('real');show('real');resetPower($('#realMarker'));pitchWindow=false;$('#pitchBtn').classList.add('hidden');$('#jumpMessage').textContent='Hold EXIT. Release in the green.';const j=$('#realJumper');j.querySelector('.canopy')?.remove();j.style.left='30%';j.style.bottom='39%';j.style.transform='rotate(0)'}
+function resolveReal(p){const j=$('#realJumper');if(p<40){exitResult='weak exit / head-high instability';j.style.transform='rotate(-70deg)';j.style.left='54%';j.style.bottom='20%';$('#jumpMessage').textContent='TOO WEAK — HEAD HIGH — UNSTABLE';setTimeout(()=>death(exitResult),750);return}if(p>60){exitResult='overpowered exit / head-low instability';j.style.transform='rotate(120deg)';j.style.left='57%';j.style.bottom='15%';$('#jumpMessage').textContent='TOO MUCH POWER — HEAD LOW — UNSTABLE';setTimeout(()=>death(exitResult),750);return}exitResult='clean, stable exit';j.style.transform='rotate(8deg)';j.style.left='49%';j.style.bottom='22%';$('#jumpMessage').textContent='PERFECT EXIT — WAIT FOR IT…';tone(750);setTimeout(()=>{pitchWindow=true;$('#pitchBtn').classList.remove('hidden');$('#jumpMessage').textContent='GROUND RUSH — PITCH NOW!';pitchTimer=setTimeout(()=>{pitchWindow=false;$('#pitchBtn').classList.add('hidden');death('no pilot chute — went in with nothing out')},1350)},650)}
+setupPower($('#realExitBtn'),$('#realMarker'),resolveReal);
+$('#pitchBtn').onclick=()=>{if(!pitchWindow)return;pitchWindow=false;clearTimeout(pitchTimer);$('#pitchBtn').classList.add('hidden');const j=$('#realJumper');j.style.transform='rotate(0) scale(.9)';j.style.bottom='37%';j.innerHTML+='<span class="canopy">🪂</span>';$('#jumpMessage').textContent='CANOPY! OBJECT CLEARED!';sting('win');setTimeout(queueRewards,1000)};
 
-let power=0, dir=1, holding=false, raf=null, last=0;
-function difficultySpeed(){ return state.hair==='Ginger'?0.095:state.hair==='Brown'?0.08:0.065; }
-function startJump(){
-  power=0;dir=1;holding=false;$('#powerMarker').style.bottom='0%';
-  $('#jumper').style.left='28%';$('#jumper').style.bottom='56%';$('#jumper').style.transform='rotate(0deg)';
-  $('#jumpMessage').textContent='Hold EXIT and release in the green.'; show('jump');
-}
-function tick(ts){
-  if(!holding) return;
-  if(!last) last=ts; const dt=Math.min(40,ts-last); last=ts;
-  power += dir*difficultySpeed()*dt;
-  if(power>=100){power=100;dir=-1}else if(power<=0){power=0;dir=1}
-  $('#powerMarker').style.bottom=`${power}%`;
-  raf=requestAnimationFrame(tick);
-}
-function beginHold(e){ e.preventDefault(); if(holding) return; holding=true; last=0; raf=requestAnimationFrame(tick); }
-function endHold(e){
-  if(!holding) return; if(e)e.preventDefault(); holding=false; cancelAnimationFrame(raf); resolveExit();
-}
-$('#exitBtn').addEventListener('pointerdown',beginHold);
-window.addEventListener('pointerup',endHold);
-window.addEventListener('pointercancel',endHold);
+let rewards=[],rewardIndex=0;
+function queueRewards(){const m=multi[state.nationality];rewards=[{icon:'♥',label:'LIKES',value:160,key:'likes'},{icon:'👥',label:'FOLLOWERS',value:48,key:'followers'},{icon:'🧑‍🤝‍🧑',label:'REAL FRIENDS',value:2*m.friends,key:'friends',note:m.friends>1?`${state.nationality.toUpperCase()} ×${m.friends}`:''},{icon:'XP',label:'EXPERIENCE',value:1,key:'xp'},{icon:'£',label:'COURSE REFUND',value:50*m.money,key:'money',note:`${state.nationality.toUpperCase()} ×${m.money}`}];rewardIndex=0;show('reward');renderReward()}
+function renderReward(){const r=rewards[rewardIndex];$('#rewardIcon').textContent=r.icon;$('#rewardLabel').textContent=r.label;$('#rewardValue').textContent='+'+r.value;$('#rewardMultiplier').textContent=r.note||'';$('#rewardNextBtn').textContent=rewardIndex===rewards.length-1?'FINISH CHAPTER':'CLAIM';tone(550+rewardIndex*90)}
+$('#rewardNextBtn').onclick=()=>{const r=rewards[rewardIndex];state[r.key]+=r.value;renderHud();save('real');rewardIndex++;if(rewardIndex<rewards.length)renderReward();else finishChapter()};
+function death(cause){clearTimeout(pitchTimer);state.deaths++;state.bfl++;$('#bflNumber').textContent='BFL #'+state.bfl;const toneText=state.xp<5?'A heroic amount of confidence was displayed relative to the amount of experience available.':'The jumper was experienced, committed and extremely unlucky.';$('#bflReport').innerHTML=`<strong>${state.name}</strong><br>Location: French Training Object<br>Weather: Fine<br>Skydives: 1,003<br>BASE jumps: 0<br>Deployment: Handheld<br>Exit quality: ${cause}<br>Cause: Ground impact<br><br>${toneText}`;$('#useLuckBtn').disabled=state.luck<=0;$('#useLuckBtn').textContent=state.luck>0?`🍀 USE LUCK — GO BACK (${state.luck})`:'🍀 NO LUCK LEFT';sting('fail');show('bfl')}
+$('#useLuckBtn').onclick=()=>{if(state.luck<1)return;state.luck--;state.luckUses++;save('real');startRealJump()};
+$('#acceptDeathBtn').onclick=finishChapter;
+function score(){const raw=state.likes+state.followers*3+state.friends*5+state.sti*10+state.xp*20-Math.floor(state.money/100)*5+state.credit;return Math.max(0,Math.round(raw*Math.pow(.95,state.luckUses)))}
+function finishChapter(){$('#chapterScore').textContent=score().toLocaleString();$('#chapterDeaths').textContent=state.deaths;$('#chapterLuck').textContent=state.luckUses;show('chapter');localStorage.removeItem('baseJumperArcadeSave');updateContinue()}
 
-function resolveExit(){
-  const j=$('#jumper');
-  if(power>=40 && power<=60){
-    $('#jumpMessage').textContent='PERFECT EXIT! Stable. PITCH!';
-    j.style.left='48%';j.style.bottom='24%';j.style.transform='rotate(8deg)';
-    setTimeout(()=>queueRewards(),900);
-  } else {
-    const low=power<40;
-    $('#jumpMessage').textContent=low?'TOO WEAK — HEAD HIGH — UNSTABLE':'TOO MUCH POWER — HEAD LOW — UNSTABLE';
-    j.style.left='54%';j.style.bottom='6%';j.style.transform=`rotate(${low?-65:120}deg)`;
-    setTimeout(()=>death(low?'weak exit / head-high instability':'overpowered exit / head-low instability'),850);
-  }
-}
-
-function queueRewards(){
-  const m=multipliers[state.nationality];
-  state.rewardQueue=[
-    {icon:'❤',label:'LIKES',value:125,apply:()=>state.likes+=125},
-    {icon:'👥',label:'FOLLOWERS',value:42,apply:()=>state.followers+=42},
-    {icon:'🧑‍🤝‍🧑',label:'REAL FRIENDS',value:2*m.friends,apply:()=>state.friends+=2*m.friends},
-    {icon:'XP',label:'EXPERIENCE',value:1,apply:()=>state.xp+=1}
-  ]; state.rewardIndex=0; show('reward'); showReward();
-}
-function showReward(){
-  const r=state.rewardQueue[state.rewardIndex];
-  $('#rewardIcon').textContent=r.icon;$('#rewardLabel').textContent=r.label;$('#rewardValue').textContent=`+${r.value}`;
-  r.apply(); renderHud();
-  $('#rewardNextBtn').textContent=state.rewardIndex===state.rewardQueue.length-1?'FINISH SLICE':'NEXT';
-}
-$('#rewardNextBtn').addEventListener('click',()=>{
-  state.rewardIndex++;
-  if(state.rewardIndex>=state.rewardQueue.length) finishRun(); else showReward();
-});
-
-function death(cause){
-  state.deaths++; state.bfl++;
-  $('#bflNumber').textContent=`BFL #${state.bfl}`;
-  $('#bflReport').innerHTML = `<strong>${state.name}</strong><br>Location: Training Roof (fictional)<br>Experience: ${state.xp}<br>Exit: ${cause}<br><br>${state.xp<5?'A heroic amount of confidence was displayed relative to the amount of experience available.':'Respect. The jumper committed fully to a very poor outcome.'}`;
-  $('#useLuckBtn').disabled=state.luck<=0;
-  $('#useLuckBtn').textContent=state.luck>0?`🍀 USE LUCK — GO BACK (${state.luck})`:'🍀 NO LUCK LEFT';
-  show('bfl');
-}
-$('#useLuckBtn').addEventListener('click',()=>{
-  if(state.luck<=0)return; state.luck--;state.luckUses++;startJump();
-});
-$('#acceptDeathBtn').addEventListener('click',finishRun);
-
-function calculateScore(){
-  let raw=state.likes + state.followers*3 + state.friends*5 + state.sti*10 + state.xp*20;
-  return Math.max(0,Math.round(raw*Math.pow(.95,state.luckUses)));
-}
-function finishRun(){ $('#finalScore').textContent=calculateScore().toLocaleString(); show('gameover'); }
-$('#restartBtn').addEventListener('click',()=>location.reload());
-
-renderHud();
+document.addEventListener('keydown',e=>{if(screens.aff.classList.contains('active')){if(e.key==='ArrowLeft')affInput=-1;if(e.key==='ArrowRight')affInput=1}if(screens.nightmare.classList.contains('active')){if(e.key==='ArrowLeft')nightMove=-1;if(e.key==='ArrowRight')nightMove=1}});
+document.addEventListener('keyup',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){affInput=0;nightMove=0}});
+load();updateCreator();updateContinue();renderHud();
