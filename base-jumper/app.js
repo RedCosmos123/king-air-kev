@@ -23,6 +23,7 @@ const difficulty = {
   Ginger: ["HARD", "Life is tough for a ginger.", "🧑‍🦰"],
 };
 const state = Object.assign({}, defaults, readSave());
+if (!cycleValues.hair.includes(state.hair)) state.hair = defaults.hair;
 if (state.scene === "setup") state.scene = "setup-name";
 const app = document.querySelector("#app");
 let audio;
@@ -130,8 +131,25 @@ function loadoutStrip() {
 function renderConfirm() { const d = difficulty[state.hair][0]; creator("LOCK HIM IN?", 7, `<div class="confirm-stage">${figure()}<div class="character-card"><h2>${escapeHtml(state.name || "UNNAMED")}</h2><p>${nationalityStats[state.nationality].flag} ${state.nationality} · ${state.hair} · ${d}</p>${loadoutStrip()}</div></div>`, nav("setup-bottoms", "complete", "LOCK IN CHARACTER")); }
 function renderComplete() { app.innerHTML = shell(`<section class="creator complete career-reveal"><img class="career-bg" src="assets/career-city.webp" alt="Neon city at night"><div class="career-shade"></div><div class="career-logo" aria-label="BASE Jumper — Career Ready"><div class="career-logo-main">BASE JUMPER</div><div class="career-logo-sub">CAREER READY</div><i class="logo-glint glint-one">✦</i><i class="logo-glint glint-two">✦</i></div>${figure()}<div class="character-card"><h1>${escapeHtml(state.name || "JUMPER")}</h1><p>${nationalityStats[state.nationality].flag} ${state.nationality} · ${difficulty[state.hair][0]}</p>${loadoutStrip()}</div><button class="primary-button start-career-button" data-action="start-career">START CAREER</button></section>`, "creator-shell"); }
 
-function renderStoryDialogue(assets, title, lines, nextScene) { const i = Math.min(state.dialogueStep || 0, lines.length - 1), [speaker, line] = lines[i], final = i === lines.length - 1, asset = Array.isArray(assets) ? assets[i] : assets, speakerLabel = speaker === "PLAYER" ? escapeHtml(state.name || "PLAYER") : speaker; app.innerHTML = shell(`<article class="scene story-dialogue is-active"><img class="scene-bg" src="assets/${asset}" alt="" draggable="false"><div class="vignette"></div>${title ? `<div class="comic-tag">${title}</div>` : ""}<div class="caption dialogue chapter-dialogue"><span class="speaker-chip ${speaker === "PLAYER" ? "dad" : "mum"}">${speakerLabel}</span>${line}</div><div class="story-control"><button class="story-button" data-dialogue-next="${nextScene}" data-dialogue-final="${final}">${final ? "CONTINUE" : "NEXT"}</button></div></article>`); }
-function renderFirstChoice() { app.innerHTML = shell(`<section class="career-choice"><div class="choice-burst"></div><div class="comic-tag">FIRST DECISION</div><h1>WHAT DO YOU<br>DO FIRST?</h1><button class="choice-card responsible" data-first-choice="responsible"><b>BOOK SKYDIVING COURSE</b><span>Learn the sensible way.</span></button><button class="choice-card reckless" data-first-choice="reckless"><b>HELL NAH — JUST SEND IT</b><span>Go BASE jumping immediately.</span></button><p>BOTH PATHS LEAD TO AFF · YOUR CHOICE WILL BE REMEMBERED</p></section>`, "choice-shell"); }
+function renderStoryDialogue(assets, title, lines, nextScene) {
+  const step = Number.isInteger(state.dialogueStep) ? state.dialogueStep : 0;
+  const i = Math.max(0, Math.min(step, lines.length - 1));
+  state.dialogueStep = i;
+  const [speaker, line] = lines[i], final = i === lines.length - 1;
+  const asset = Array.isArray(assets) ? assets[i] : assets;
+  const speakerLabel = speaker === "PLAYER" ? escapeHtml(state.name || "PLAYER") : speaker;
+  app.innerHTML = shell(`<article class="scene story-dialogue is-active" data-shot="${asset}"><img class="scene-bg" src="${storyArt(asset, state.hair)}" alt="" draggable="false"><div class="vignette"></div>${title && i === 0 ? `<div class="comic-tag">${title}</div>` : ""}<div class="chapter-panel"><div class="caption dialogue chapter-dialogue"><span class="speaker-chip ${speaker === "PLAYER" ? "dad" : "mum"}">${speakerLabel}</span>${line}</div><div class="story-control"><button class="story-button" data-dialogue-next="${nextScene}" data-dialogue-final="${final}">${final ? "CONTINUE" : "NEXT"}</button></div></div></article>`);
+  if (!final && Array.isArray(assets)) new Image().src = storyArt(assets[i + 1], state.hair);
+}
+function renderChoice({question, choices}) {
+  app.innerHTML = shell(`<section class="career-choice" aria-labelledby="choice-question"><img class="choice-portrait" src="${storyArt("choice", state.hair)}" alt="Your ${state.hair.toLowerCase()}-haired jumper looks at you, considering his next move." draggable="false"><div class="choice-shade" aria-hidden="true"></div><div class="choice-content"><p class="choice-eyebrow">YOUR MOVE, ${escapeHtml(state.name || "JUMPER")}</p><h1 id="choice-question">${question}</h1><div class="choice-options">${choices.map((choice, i) => `<button class="choice-card ${choice.id}" data-first-choice="${choice.id}"><span class="choice-number" aria-hidden="true">0${i + 1}</span><span class="choice-copy"><b>${choice.title}</b><span>${choice.description}</span></span><span class="choice-arrow" aria-hidden="true">›</span></button>`).join("")}</div><p class="choice-footnote">CHOOSE YOUR NEXT STEP</p></div></section>`, "choice-shell");
+}
+function renderFirstChoice() {
+  renderChoice({question: "WHAT DO YOU DO FIRST?", choices: [
+    {id: "responsible", title: "BOOK SKYDIVING COURSE", description: "Learn the sensible way."},
+    {id: "reckless", title: "HELL NAH — JUST SEND IT", description: "Go BASE jumping immediately."},
+  ]});
+}
 function renderChapterPreview() { const reckless = state.firstChoice === "reckless"; app.innerHTML = shell(`<section class="chapter-preview"><div class="preview-icon">${reckless ? "☠" : "✈"}</div><p>CHOICE LOCKED</p><h1>${reckless ? "JUST SEND IT" : "SKYDIVING COURSE"}</h1><div class="preview-copy">${reckless ? "Next: the reckless nightmare roof jump — then AFF." : "Next: AFF skydiving foundation."}</div><button class="primary-button" data-action="replay-choice">CHANGE CHOICE</button></section>`, "choice-shell"); }
 
 function bindActions() {
